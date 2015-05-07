@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME         => 'Illumos::Zones',
     VERSION_FROM => 'lib/Illumos/Zones.pm',
-    ABSTRACT     => 'A Perl Module to administrate Illumos Zones',
+    ABSTRACT     => 'A Perl Module to administrate Illumos Zones.',
     AUTHOR       => 'Dominik Hassler <hadfl@cpan.org>',
     LICENSE      => 'gpl_3',
     META_MERGE   => {
@@ -15,7 +15,7 @@ WriteMakefile(
         resources => {
             license     => 'http://opensource.org/licenses/GPL-3.0',
             repository  => 'https://github.com/hadfl/Illumos-Zones',
-            bugtracker  => 'https://github.com/Illumos-Zones/issues'
+            bugtracker  => 'https://github.com/hadfl/Illumos-Zones/issues'
         },
         no_index => {directory => ['t', 'setup']}
     },
