@@ -8,9 +8,8 @@ perl:
   - "5.12"
   - "5.10"
 
-# disable dependency install
-install:
-  - true
+before_install:
+  - cpanm --notest Data::Processor
 
 script:
   - perl ./t/zones.t || test $? == 1
