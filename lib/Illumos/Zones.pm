@@ -669,7 +669,7 @@ print debug information to STDERR
 
 =head2 schema
 
-returns a schma for "Data::Processor" so that the zone config can be
+returns a schema for "Data::Processor" so that the zone config can be
 validated before written to the zone.
 
  my $schema = $zone->schema();
