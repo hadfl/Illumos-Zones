@@ -1,5 +1,10 @@
 LICENSE
 MANIFEST
+MANIFEST.SKIP
 Makefile.PL
 README.md
 lib/Illumos/Zones.pm
+t/zones.t
+t/manifest.t
+t/pod.t
+.travis.yml
