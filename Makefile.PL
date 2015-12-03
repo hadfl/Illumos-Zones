@@ -14,7 +14,8 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => 0,
     },
     BUILD_REQUIRES   => {
-        'Test::More' => 0,
+        'Test::More'      => 0,
+        'Data::Processor' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Illumos-Zones-*' },
