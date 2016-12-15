@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 # version
-our $VERSION = '0.1.2';
+our $VERSION = '0.1.3';
 
 # commands
 my $ZONEADM  = '/usr/sbin/zoneadm';
@@ -23,6 +23,7 @@ my %ZMAP    = (
 
 # properties that can only be set on creation
 my @CREATEPROP = qw(zonename zonepath brand ip-type);
+my @LXNETPROPS = qw(gateway ips primary);
 
 my $regexp = sub {
     my $rx = shift;
@@ -84,7 +85,7 @@ my $SCHEMA = {
     brand       => {
         description => "the zone's brand type",
         default     => 'lipkg',
-        validator   => $elemOf->(qw(ipkg lipkg)),
+        validator   => $elemOf->(qw(ipkg lipkg lx)),
     },
     'ip-type'   => {
         description => 'ip-type of zone. can either be "exclusive" or "shared"',
@@ -271,6 +272,22 @@ my $SCHEMA = {
                 description => 'IP address of default router',
                 validator   => $regexp->(qr/^\d{1,3}(?:\.\d{1,3}){3}$/, 'IP address not valid'),
             },
+            ips         => {
+                optional    => 1,
+                array       => 1,
+                description => 'IPs for LX zones',
+                validator   => $regexp->(qr/^\d{1,3}(?:\.\d{1,3}){3}(?:\/\d{1,2})$/, 'Not a valid CIDR IP address'),
+            },
+            gateway     => {
+                optional    => 1,
+                description => 'Gateway for LX zones',
+                validator   => $regexp->(qr/^\d{1,3}(?:\.\d{1,3}){3}$/, 'IP address not valid'),
+            },
+            primary     => {
+                optional    => 1,
+                description => 'Primary Interface for LX zones',
+                validator   => $elemOf->(qw(true false)),
+            },
         },
     },
     rctl    => {
@@ -316,6 +333,33 @@ my $zoneCmd = sub {
 
     print STDERR '# ' . join(' ', @cmd) . "\n" if $self->{debug};
     system(@cmd) and die "ERROR: cannot $cmd zone $zoneName\n";
+};
+
+my $encodeLXnetProp = sub {
+    my $self     = shift;
+    my $prop     = shift;
+    my $value    = shift;
+
+    $value = ref $value eq 'ARRAY' ? "(name=$prop,value=\"" . join (',', @$value) . '")'
+        : "(name=$prop,value=\"$value\")";
+    $prop  = 'property';
+
+    return ($prop, $value);
+};
+
+my $decodeLXnetProp = sub {
+    my $self     = shift;
+    my $prop     = shift;
+    my $value    = shift;
+
+    return ($prop, $value) if !($prop eq 'property');
+
+    ($prop)      = $value =~ /name=(\w+)/;
+    my @values = split /,/, ($value =~ /value="([^"]+)"/)[0];
+    if (!$SCHEMA->{net}->{members}->{$prop}->{array}) {
+        return ($prop, $values[0]);
+    }
+    return ($prop, [ @values ]);
 };
 
 # constructor
@@ -441,9 +485,11 @@ sub deleteZone {
 }
 
 sub installZone {
-    my $self = shift;
+    my $self     = shift;
+    my $zoneName = shift;
+    my $img      = shift;
 
-    $self->$zoneCmd(shift, 'install');
+    $self->$zoneCmd($zoneName, 'install', ($img ? ('-s', $img) : ()));
 }
 
 sub uninstallZone {
@@ -486,6 +532,9 @@ sub getZoneProperties {
         $property or next;
 
         if (defined $isres && length $isres > 0) {
+            # transform net properties for LX zones
+            ($property, $value) = $self->$decodeLXnetProp($property, $value) if $resName eq 'net';
+
             # check if property exists in schema
             grep { $_ eq $property } keys %{$SCHEMA->{$resName}->{members}} or next; 
             if ($self->$resIsArray($resName)) {
@@ -517,6 +566,7 @@ sub setZoneProperties {
     my $self     = shift;
     my $zoneName = shift;
     my $props    = shift;
+    my $img      = shift;
     my $oldProps = $self->getZoneProperties($zoneName);
 
     $self->zoneExists($zoneName) || $self->createZone($zoneName,
@@ -526,7 +576,7 @@ sub setZoneProperties {
     delete $props->{$_} for @CREATEPROP;
 
     my $state = $self->zoneState($zoneName);
-    $self->installZone($zoneName) if $state eq 'configured';
+    $self->installZone($zoneName, $img) if $state eq 'configured';
 
     # clean up all resources
     $self->clearResources($zoneName);
@@ -579,7 +629,14 @@ sub addResource {
     my @cmd = ($ZONECFG, '-z', $zoneName, 'add', "$resource;");
 
     for my $property (keys %$props) {
-        push @cmd, ('set', "$property=$props->{$property};");
+        # check if it is an LX net property
+        if (grep { $_ eq $property } @LXNETPROPS) {
+            my ($prop, $value) = $self->$encodeLXnetProp($property, $props->{$property});
+            push @cmd, ('add', $prop, $value, ';');
+        }
+        else {
+            push @cmd, ('set', "$property=$props->{$property};");
+        }
     }
     push @cmd, qw(end);
 
