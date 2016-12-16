@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 # version
-our $VERSION = '0.1.3';
+our $VERSION = '0.1.4';
 
 # commands
 my $ZONEADM  = '/usr/sbin/zoneadm';
@@ -527,6 +527,8 @@ sub getZoneProperties {
     my $resName;
     while (<$props>) {
         chomp;
+        # remove square brackets at beginning and end of line
+        s/^(\s*)\[/$1/ && s/\]\s*//;
         my ($isres, $property, $value) = /^(\s+)?([^:]+):(?:\s+(.*))?$/;
         # at least property must be valid
         $property or next;
