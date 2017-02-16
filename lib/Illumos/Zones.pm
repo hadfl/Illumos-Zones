@@ -249,7 +249,7 @@ my $SCHEMA = {
             options => {
                 optional    => 1,
                 description => 'mounting options',
-                validator   => $regexp->(qr/^\[?[\w,]+\]?$/, 'options not valid'),
+                validator   => $regexp->(qr/^\[[\w,]*\]$/, 'options not valid'),
             },
         },
     },
