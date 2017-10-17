@@ -415,7 +415,7 @@ sub listZones {
     my $zoneList = [];
     while (my $zone = <$zones>) {
         chomp $zone;
-        push @$zoneList, { map { $_ => (split /:/, $zone, 7)[$ZMAP{$_}] } keys %ZMAP };
+        push @$zoneList, { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
     }
 
     return $zoneList;
