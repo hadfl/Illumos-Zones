@@ -419,7 +419,8 @@ sub listZones {
         my $zoneCfg = { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
         # apply brand and SMF filter
         next if $opts->{brandFilter} && $zoneCfg->{brand} !~ /$opts->{brandFilter}/;
-        next if $opts->{requireSMF}  && !-f $zoneCfg->{zonepath} . '/root/etc/svc/repository.db';
+        next if $opts->{requireSMF}  && $zoneCfg->{zonename} ne 'global'
+            && !-f $zoneCfg->{zonepath} . '/root/etc/svc/repository.db';
 
         push @$zoneList, $zoneCfg;
     }
