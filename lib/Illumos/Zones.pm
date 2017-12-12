@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 # version
-our $VERSION = '0.1.5';
+our $VERSION = '0.1.6';
 
 # commands
 my $ZONEADM  = '/usr/sbin/zoneadm';
