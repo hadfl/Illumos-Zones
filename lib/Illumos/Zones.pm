@@ -45,6 +45,20 @@ my $elemOf = sub {
     }
 };
 
+my $getBrands  = sub {
+    my @brands = ();
+    for (glob('/usr/lib/brand/*/config.xml')) {
+        open my $fh, "<$_" or next;
+        while (<$fh>) {
+            /<brand\s+name="(\S+)"/ or next;
+            push @brands, $1;
+            last;
+        }
+        close $fh;
+    }
+    return \@brands;
+};
+
 my $TEMPLATE = {
     zonename  => '',
     zonepath  => '',
@@ -85,7 +99,7 @@ my $SCHEMA = {
     brand       => {
         description => "the zone's brand type",
         default     => 'lipkg',
-        validator   => $elemOf->(qw(ipkg lipkg lx sparse)),
+        validator   => $elemOf->(@{$getBrands->()}),
     },
     'ip-type'   => {
         description => 'ip-type of zone. can either be "exclusive" or "shared"',
