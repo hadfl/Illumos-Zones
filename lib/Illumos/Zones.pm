@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 # version
-our $VERSION = '0.1.6';
+our $VERSION = '0.1.7';
 
 # commands
 my $ZONEADM  = '/usr/sbin/zoneadm';
@@ -45,10 +45,10 @@ my $elemOf = sub {
     }
 };
 
-my $getBrands  = sub {
+my $getBrands = sub {
     my @brands = ();
     for (glob('/usr/lib/brand/*/config.xml')) {
-        open my $fh, "<$_" or next;
+        open my $fh, '<', $_ or next;
         while (<$fh>) {
             /<brand\s+name="(\S+)"/ or next;
             push @brands, $1;
@@ -920,6 +920,7 @@ this program. If not, see L<http://www.gnu.org/licenses/>.
 
 =head1 AUTHOR
 
+S<Andy Fiddaman E<lt>omnios@citrus-it.co.ukE<gt>>,
 S<Dominik Hassler E<lt>hadfl@cpan.orgE<gt>>,
 S<Tobias Oetiker E<lt>tobi@oetiker.chE<gt>>
 
